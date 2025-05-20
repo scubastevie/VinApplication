@@ -29,5 +29,18 @@ services:
       ASPNETCORE_ENVIRONMENT: Development
       ConnectionStrings__DefaultConnection: "Host=db;Port=5432;Database=your_db;Username=your_user;Password=your_password"
 
+  frontend:
+    build:
+      context: ./VinWeb   # assuming your Vite app is in a folder named 'frontend'
+    container_name: vite-app
+    ports:
+      - "5173:5173"
+    volumes:
+      - ./VinWeb:/app
+      - /app/node_modules
+    environment:
+      - CHOKIDAR_USEPOLLING=true
+    command: npm run dev
+
 volumes:
   pgdata:
