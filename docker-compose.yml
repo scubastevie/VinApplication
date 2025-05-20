@@ -31,7 +31,7 @@ services:
 
   frontend:
     build:
-      context: ./VinWeb   # assuming your Vite app is in a folder named 'frontend'
+      context: ./VinWeb
     container_name: vite-app
     ports:
       - "5173:5173"
@@ -41,6 +41,16 @@ services:
     environment:
       - CHOKIDAR_USEPOLLING=true
     command: npm run dev
+
+  worker:
+    build:
+      context: ./VinDecoderWorker
+    container_name: vin-worker
+    depends_on:
+      - db
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ConnectionStrings__DefaultConnection: "Host=db;Port=5432;Database=your_db;Username=your_user;Password=your_password"
 
 volumes:
   pgdata:

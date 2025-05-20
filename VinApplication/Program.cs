@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using System;
+using VinData;
 
 var builder = WebApplication.CreateBuilder(args);
 
