@@ -14,6 +14,17 @@ services:
     volumes:
       - pgdata:/var/lib/postgresql/data
 
+  azurite:
+    image: mcr.microsoft.com/azure-storage/azurite
+    container_name: azurite
+    ports:
+      - "10000:10000"
+      - "10001:10001"
+      - "10002:10002"
+    volumes:
+      - azurite-data:/data
+    command: "azurite-blob --blobHost 0.0.0.0"
+
   web:
     build:
       context: .
@@ -23,11 +34,14 @@ services:
     container_name: vin-app
     depends_on:
       - db
+      - azurite
     ports:
       - "5000:80"
     environment:
       ASPNETCORE_ENVIRONMENT: Development
       ConnectionStrings__DefaultConnection: "Host=db;Port=5432;Database=your_db;Username=your_user;Password=your_password"
+      AzureStorage__ConnectionString: "DefaultEndpointsProtocol=http;AccountName=devstoreaccount1;AccountKey=Eby8vdM02xNOcqFlqUwJPLlmEtlCDXJ1OUzFT50uSRZ6IFsuFq2UVErCz4I6tq/K1SZFPTOtr/KBHBeksoGMGw==;BlobEndpoint=http://azurite:10000/devstoreaccount1;"
+      AzureStorage__ContainerName: "uploads"
 
   frontend:
     build:
@@ -44,13 +58,17 @@ services:
 
   worker:
     build:
-      context: ./VinDecoderWorker
+      context: .
+      dockerfile: VinDecoderWorker/Dockerfile
     container_name: vin-worker
     depends_on:
       - db
     environment:
       ASPNETCORE_ENVIRONMENT: Development
       ConnectionStrings__DefaultConnection: "Host=db;Port=5432;Database=your_db;Username=your_user;Password=your_password"
+      AzureStorage__ConnectionString: "DefaultEndpointsProtocol=http;AccountName=devstoreaccount1;AccountKey=Eby8vdM02xNOcqFlqUwJPLlmEtlCDXJ1OUzFT50uSRZ6IFsuFq2UVErCz4I6tq/K1SZFPTOtr/KBHBeksoGMGw==;BlobEndpoint=http://azurite:10000/devstoreaccount1;"
+      AzureStorage__ContainerName: "uploads"
 
 volumes:
   pgdata:
+  azurite-data:

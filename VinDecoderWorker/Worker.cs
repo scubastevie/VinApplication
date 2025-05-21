@@ -49,7 +49,7 @@ public class Worker : BackgroundService
                     });
                 }
 
-                await Task.Delay(1000, stoppingToken); // Avoid rate limits
+                await Task.Delay(1000, stoppingToken);
             }
 
             await db.SaveChangesAsync(stoppingToken);

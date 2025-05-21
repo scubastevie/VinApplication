@@ -17,7 +17,19 @@ public class CsvUploadController : ControllerBase
     public CsvUploadController(AppDbContext context, IConfiguration configuration)
     {
         _context = context;
-        _blobServiceClient = new BlobServiceClient(configuration["AzureStorage:ConnectionString"]);
+
+        var blobConnectionString = configuration["AzureStorage:ConnectionString"];
+        var options = new BlobClientOptions
+        {
+            Retry = { Mode = Azure.Core.RetryMode.Exponential },
+            Transport = new Azure.Core.Pipeline.HttpClientTransport(new HttpClient(
+                new HttpClientHandler
+                {
+                    ServerCertificateCustomValidationCallback = HttpClientHandler.DangerousAcceptAnyServerCertificateValidator
+                }))
+        };
+
+        _blobServiceClient = new BlobServiceClient(blobConnectionString, options);
         _containerName = configuration["AzureStorage:ContainerName"];
     }
 
@@ -27,7 +39,6 @@ public class CsvUploadController : ControllerBase
         if (file == null || file.Length == 0)
             return BadRequest("CSV file is required.");
 
-        // ✅ Step 1: Upload raw file to Blob Storage
         var containerClient = _blobServiceClient.GetBlobContainerClient(_containerName);
         await containerClient.CreateIfNotExistsAsync();
 
@@ -37,7 +48,6 @@ public class CsvUploadController : ControllerBase
         using var uploadStream = file.OpenReadStream();
         await blobClient.UploadAsync(uploadStream, overwrite: true);
 
-        // ✅ Step 2: Rewind stream and parse contents
         uploadStream.Position = 0;
         using var reader = new StreamReader(uploadStream);
 
